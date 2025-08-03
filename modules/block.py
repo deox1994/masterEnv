@@ -5,6 +5,7 @@ import torch.functional as F
 from ultralytics.nn.modules.conv import Conv
 
 from torch.nn.modules.pooling import MaxPool2d, AvgPool2d
+from .pooling import TMaxAvgPool2d
 
 __all__ = (
     "SPPFNew",
@@ -24,8 +25,9 @@ class SPPFNew(nn.Module):
         self.cv1 = Conv(c1, c_, 1, 1)
         self.cv2 = Conv(c_ * 4, c2, 1, 1)
         self.k = k
-        self.m = MaxPool2d(kernel_size=self.k, stride=1, padding=self.k//2)
-        #self.m = AvgPool2d(kernel_size=self.k, stride=1, padding=self.k//2)
+        #self.m = MaxPool2d(kernel_size=self.k, stride=1, padding=self.k//2)
+        #self.m = AvgPool2d(kernel_size=self.k, stride=1, padding=self.k//2)}
+        self.m = TMaxAvgPool2d(kernel_size=self.k, stride=1, padding=self.k//2, k=3, T=0.7)
 
     def forward(self, x):
         """Forward pass through Ghost Convolution block."""
