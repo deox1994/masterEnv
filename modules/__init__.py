@@ -4,9 +4,11 @@ from .block import (
 
 from .pooling import (
     TMaxAvgPool2d,
+    RAPool2d,
 )
 
 __all__ = (
     "SPPFNew",
-    "TMaxAvgPool2d"
+    "TMaxAvgPool2d",
+    "RAPool2d",
 )
