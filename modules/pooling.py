@@ -5,6 +5,7 @@ from torch.nn.modules.module import Module
 __all__ = (
     "TMaxAvgPool2d",
     "RAPool2d",
+    "RWPool2d",
 )
 
 class TMaxAvgPool2d(Module):
@@ -82,3 +83,48 @@ class RAPool2d(Module):
         out = x_unfolded[:,:,:,:,self.t:].mean(dim=4)
 
         return out
+    
+class RWPool2d(Module):
+    r""" Applies Rank-based Weighted Pooling
+
+    Step1: Sort activations values in descending order
+    Step2: Assign a rank value to each element (higer activations are linked to lower ranks)
+    Step3: Compute probability Pr = alpha * (1 - alpha)^(r-1)
+    Step4: Compute weighted sum
+
+    .. _link:
+        https://sci-hub.se/https://doi.org/10.1016/j.neunet.2016.07.003
+    """
+    def __init__(self, kernel_size, stride=None, padding=0, alpha=0.5):
+        super(RWPool2d, self).__init__()
+        self.kernel_size = kernel_size
+        self.stride = stride if stride is not None else kernel_size
+        self.padding = padding
+        self.alpha = alpha
+        
+    def forward(self, x):
+        device = x.device
+        batch_size, channels, height, width = x.size()
+
+        # Add padding if requested
+        if self.padding > 0:
+            x = F.pad(x, (self.padding, self.padding, self.padding, self.padding), mode='constant', value=0)
+        
+        # Compute output tensor dimensions
+        #out_height = (height + 2 * self.padding - self.kernel_size) // self.stride + 1
+        #out_width = (width + 2 * self.padding - self.kernel_size) // self.stride + 1
+
+        # Extract windows from pooling regions efficiently
+        x_unfolded = x.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
+        #x_unfolded = x_unfolded.contiguous().view(batch_size, channels, out_height, out_width, -1)
+        x_unfolded = x_unfolded.contiguous().view(batch_size, channels, (height + 2 * self.padding - self.kernel_size) // self.stride + 1, (width + 2 * self.padding - self.kernel_size) // self.stride + 1, -1)
+        x_unfolded = x_unfolded.sort(dim=4, descending=True)[0]
+
+        # Compute ranks for each element (Higher activation values are linked to lower ranks)
+        ranks = torch.arange(0, self.kernel_size**2, dtype=torch.float16).to(device) # This is equal to rank-1
+        ranks = ranks.view(1, 1, 1, 1, self.kernel_size**2).expand(x_unfolded.size())
+
+        # Compute weights based on ranks values
+        #weights = torch.pow(self.alpha, ranks)*self.alpha
+        
+        return torch.mul(x_unfolded, torch.pow(self.alpha, ranks)*self.alpha).sum(dim=4).half()
