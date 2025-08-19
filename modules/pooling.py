@@ -6,6 +6,7 @@ __all__ = (
     "TMaxAvgPool2d",
     "RAPool2d",
     "RWPool2d",
+    "SoftPool2d",
 )
 
 class TMaxAvgPool2d(Module):
@@ -128,3 +129,41 @@ class RWPool2d(Module):
         #weights = torch.pow(self.alpha, ranks)*self.alpha
         
         return torch.mul(x_unfolded, torch.pow(self.alpha, ranks)*self.alpha).sum(dim=4).half()
+    
+class SoftPool2d(Module):
+    r""" Applies Rank-based Stochastic Pooling
+
+    .. _link:
+        https://sci-hub.se/https://doi.org/10.1016/j.neunet.2016.07.003
+    """
+    def __init__(self, kernel_size, stride=None, padding=0, k=3, T=0.5):
+        super(SoftPool2d, self).__init__()
+        self.kernel_size = kernel_size
+        self.stride = stride if stride is not None else kernel_size
+        self.padding = padding
+        self.k = k
+        self.T = T
+        
+    def forward(self, x):
+        device = x.device
+        batch_size, channels, height, width = x.size()
+
+        # Add padding if requested
+        if self.padding > 0:
+            x = F.pad(x, (self.padding, self.padding, self.padding, self.padding), mode='constant', value=0)
+
+        # Compute output tensor dimensions
+        out_height = (height + 2 * self.padding - self.kernel_size) // self.stride + 1
+        out_width = (width + 2 * self.padding - self.kernel_size) // self.stride + 1
+
+        # Extract windows from pooling regions efficiently
+        x_unfolded = x.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
+        x_unfolded = x_unfolded.contiguous().view(batch_size, channels, out_height, out_width, -1)
+
+        # Compute soft weights
+        weights = torch.exp(x_unfolded)
+        weights = weights/(weights.sum(dim=4)).unsqueeze(-1)
+
+        out = torch.mul(x_unfolded, weights).sum(dim=4)
+
+        return out
