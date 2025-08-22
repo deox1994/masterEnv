@@ -1,5 +1,6 @@
 from .block import (
     SPPFNew,
+    DualBranchSPPF,
 )
 
 from .pooling import (
@@ -11,6 +12,7 @@ from .pooling import (
 
 __all__ = (
     "SPPFNew",
+    "DualBranchSPPF",
     "TMaxAvgPool2d",
     "RAPool2d",
     "RWPool2d",
