@@ -11,6 +11,7 @@ __all__ = (
     "SPPFNew",
     "DualBranchSPPF",
     "SPPF_LSKA",
+    "DualBranchSPPF_LSKA",
 )
 
 class SPPFNew(nn.Module):
@@ -96,3 +97,37 @@ class SPPF_LSKA(nn.Module):
         y_axu = self.DW_D_conv_v(y_axu)
         y_axu = self.conv1(y_axu)
         return self.cv2(y * y_axu)
+       
+class DualBranchSPPF_LSKA(nn.Module):
+    r"""
+    """
+    def __init__(self, c1, c2, k=5):
+        super(DualBranchSPPF_LSKA, self).__init__()
+        self.k = k
+
+        c_ = c1 // 2  # hidden channels
+        self.cv_sta = Conv(c1, c_, 1, 1)
+        self.cv1 = Conv(c_ * 4, c2, 1, 1)
+        self.cv2 = Conv(c_ * 4, c2, 1, 1)
+        self.cv_end = Conv(c_ * 4, c2, 1, 1)
+        self.m1 = MaxPool2d(kernel_size=self.k, stride=1, padding=self.k//2)
+        self.m2 = AvgPool2d(kernel_size=self.k, stride=1, padding=self.k//2)
+        self.DW_conv_h = nn.Conv2d(c_ * 4, c_ * 4, kernel_size=(1, 3), stride=(1,1), padding=(0,(3-1)//2), groups=c_ * 4)
+        self.DW_conv_v = nn.Conv2d(c_ * 4, c_ * 4, kernel_size=(3, 1), stride=(1,1), padding=((3-1)//2,0), groups=c_ * 4)
+        self.DW_D_conv_h = nn.Conv2d(c_ * 4, c_ * 4, kernel_size=(1, 3), stride=(1,1), padding=(0,2), groups=c_ * 4, dilation=2)
+        self.DW_D_conv_v = nn.Conv2d(c_ * 4, c_ * 4, kernel_size=(3, 1), stride=(1,1), padding=(2,0), groups=c_ * 4, dilation=2)
+        self.conv1 = nn.Conv2d(c_ * 4, c_ * 4, 1)
+
+    def forward(self, x):
+        x_aux = self.cv_sta(x)
+        y1 = [x_aux]
+        y2 = [x_aux]
+        y1.extend(self.m1(y1[-1]) for _ in range(3))
+        y2.extend(self.m2(y2[-1]) for _ in range(3))
+        y = torch.cat([self.cv1(torch.cat(y1, 1)), self.cv2(torch.cat(y2, 1))], 1)
+        y_axu = self.DW_conv_h(y)
+        y_axu = self.DW_conv_v(y_axu)
+        y_axu = self.DW_D_conv_h(y_axu)
+        y_axu = self.DW_D_conv_v(y_axu)
+        y_axu = self.conv1(y_axu)
+        return self.cv_end(y * y_axu)
