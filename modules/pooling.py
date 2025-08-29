@@ -136,13 +136,11 @@ class SoftPool2d(Module):
     .. _link:
         https://sci-hub.se/https://doi.org/10.1016/j.neunet.2016.07.003
     """
-    def __init__(self, kernel_size, stride=None, padding=0, k=3, T=0.5):
+    def __init__(self, kernel_size, stride=None, padding=0):
         super(SoftPool2d, self).__init__()
         self.kernel_size = kernel_size
         self.stride = stride if stride is not None else kernel_size
         self.padding = padding
-        self.k = k
-        self.T = T
         
     def forward(self, x):
         device = x.device

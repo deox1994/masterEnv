@@ -7,6 +7,7 @@ from .block import (
 
 from .pooling import (
     TMaxAvgPool2d,
+    TMaxAvgPool2dONNX,
     RAPool2d,
     RWPool2d,
     SoftPool2d,
@@ -18,6 +19,7 @@ __all__ = (
     "SPPF_LSKA",
     "DualBranchSPPF_LSKA",
     "TMaxAvgPool2d",
+    "TMaxAvgPool2dONNX",
     "RAPool2d",
     "RWPool2d",
     "SoftPool2d",
