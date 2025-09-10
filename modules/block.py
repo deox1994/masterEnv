@@ -28,9 +28,9 @@ class SPPFNew(nn.Module):
         self.cv1 = Conv(c1, c_, 1, 1)
         self.cv2 = Conv(c_ * 4, c2, 1, 1)
         self.k = k
-        #self.m = MaxPool2d(kernel_size=self.k, stride=1, padding=self.k//2)
+        self.m = MaxPool2d(kernel_size=self.k, stride=1, padding=self.k//2)
         #self.m = AvgPool2d(kernel_size=self.k, stride=1, padding=self.k//2)
-        self.m = TMaxAvgPool2d(kernel_size=self.k, stride=1, padding=self.k//2, k=3, T=0.9)
+        #self.m = TMaxAvgPool2d(kernel_size=self.k, stride=1, padding=self.k//2, k=3, T=0.9)
         #self.m = RAPool2d(kernel_size=self.k, stride=1, padding=self.k//2)
         #self.m = RWPool2d(kernel_size=self.k, stride=1, padding=self.k//2)
         #self.m = SoftPool2d(kernel_size=self.k, stride=1, padding=self.k//2)
