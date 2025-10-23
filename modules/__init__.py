@@ -1,8 +1,7 @@
 from .block import (
     SPPFNew,
     DualBranchSPPF,
-    SPPF_LSKA,
-    DualBranchSPPF_LSKA,
+    C2f_ScConv,
 )
 
 from .pooling import (
@@ -13,17 +12,16 @@ from .pooling import (
 )
 
 from .conv import (
-    ScConv,
+    ScConvModule,
 )
 
 __all__ = (
     "SPPFNew",
     "DualBranchSPPF",
-    "SPPF_LSKA",
-    "DualBranchSPPF_LSKA",
+    "C2f_ScConv",
     "TMaxAvgPool2d",
     "RAPool2d",
     "RWPool2d",
     "SoftPool2d",
-    "ScConv",
+    "ScConvModule",
 )
