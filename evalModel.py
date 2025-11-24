@@ -14,8 +14,8 @@ from typing import Optional, List, Tuple
 def _getTotalPower(stats) -> Optional[float]:
 	if not isinstance(stats, dict):
 		return None
-	val = float(stats['Power TOT'])/1000.0
-	return val
+	power = float(stats['Power TOT'])/1000.0
+	return power
 
 
 class PowerSampler:
@@ -71,33 +71,48 @@ def jtop_context():
 			time.sleep(0.05)
 		yield jetson
 
-def run_on_images(model_name: str, model_path: str, val_path: str):
+def run_on_images(model_name: str, model_path: str, val_path: str, power: str):
 	model = YOLO(model_path)
-	metrics_all = []
 
-	with jtop_context() as jetson:
-		sampler = PowerSampler(jetson, period_s = 1)
+	predTimes = []
+#	with jtop_context() as jetson:
+	if not power == "None":
+		if power == "INA219":
+			# TODO: Manage INA219 Data Acquisition
+			device = "X"
+		elif power == "INA3221":
+			jetson = jtop()
+			jetson.start()
+			device = jetson
+		sampler = PowerSampler(device, period_s = 1)
 		time.sleep(0.005)
-		dummy = np.zeros((640, 640, 3), dtype=np.uint8)
-		x = model(dummy, verbose=False)
-
-		predTimes = []
-
-		print("----------   Start evaluation of " + model_name + " model evaluation   ----------")
 		sampler.start()
 
-		results = model(val_path, imgsz=640, batch=1, half=True, stream=True)
-		for result in tqdm(results, total=len(listdir(val_path)), desc="Model Evaluation"):
-			predTimes.append(result.speed['preprocess'] + result.speed['inference'] + result.speed['postprocess'])
+	#dummy = np.zeros((640, 640, 3), dtype=np.uint8)
+	#x = model(dummy, verbose=False)
 
+	print("----------   Start evaluation of " + model_name + " model evaluation   ----------")
+
+	results = model(val_path, imgsz=640, batch=1, half=True, stream=True, verbose=False)
+	for result in tqdm(results, total=len(listdir(val_path)), desc="Model Evaluation"):
+		predTimes.append(result.speed['preprocess'] + result.speed['inference'] + result.speed['postprocess'])
+
+	print("----------   YOLO" + model_name + " model evaluated ----------")
+
+	if not power == "None":
 		sampler.stop()
-		print("----------   YOLO" + model_name + " model evaluated ----------")
+		if power == "INA219":
+			# TODO: Managa INA219 Data Acquisition
+			x = 1
+		elif power == "INA3221":
+			device.close()
 
-		inf_time = sum(predTimes) / len(predTimes)
+	inf_time = sum(predTimes) / len(predTimes)
+	print("Average Inference Speed: ", inf_time, " ms")
+	print("Average FPS: ", int(1000/inf_time))
+
+	if not power == "None":
 		energy, duration = sampler.integrate_energy_j()
-
-		print("Average Inference Speed: ", inf_time, " ms")
-		print("Average FPS: ", int(1000/inf_time))
 		print("Average Energy: " , energy, " J")
 		print("Average Power: ", energy/duration, " W")
 
@@ -114,4 +129,4 @@ if __name__ == "__main__":
 	parser.add_argument("--data", type=str, default="datasets/DsLMF_minerBehaviorDataset/images/val", help="Directory of validation dataset")
 	parser.add_argument("--power", type=str, default="None", help="Device used to measure power consumption")
 	args = parser.parse_args()
-	run_on_images(args.model, args.dir + args.model + "/best." + args.format, args.data)
+	run_on_images(args.model, args.dir + args.model + "/weights/best." + args.format, args.data, args.power)
