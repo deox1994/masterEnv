@@ -4,6 +4,7 @@ from ultralytics import YOLO
 
 def exportModel(model_name: str, model_path: str, format: str, repre: str, save_dir: str):
 	model = YOLO(model_path)
+	extension = ""
 	if format == "ONNX":
 		extension = "onnx"
 	elif format == "NCNN":
@@ -17,7 +18,9 @@ def exportModel(model_name: str, model_path: str, format: str, repre: str, save_
 	if repre == "fp16":
 		model.export(format=extension, half=True)
 	elif repre == "int8":
-		model.export(formar=extension, int8=True)
+		model.export(format=extension, int8=True)
+	else:
+		model.export(format=extension)
 
 	if not os.path.isdir(save_dir):
 		print("---------- Save directory not found")
@@ -37,7 +40,7 @@ if __name__ == "__main__":
 	parser.add_argument("save_dir", type=str, help="Directory to save the exported model")
 	parser.add_argument("--train_dir", type=str, default="models/trained/", help="Directory where Pytorch format trained models are located")
 	parser.add_argument("--format", type=str, default="ONNX", help="Format of the exported model")
-	parser.add_argument("--repre", type=str, help="Numeric representation of the exported model")
+	parser.add_argument("--repre", type=str, default="fp32", help="Numeric representation of the exported model")
 	args = parser.parse_args()
 	exportModel(args.model, args.train_dir + args.model + "/weights/best.pt", args.format, args.repre, args.save_dir)
 
