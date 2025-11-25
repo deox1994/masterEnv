@@ -1,10 +1,11 @@
+import sys
 import time
 import argparse
 import threading
+import subprocess
 import numpy as np
 
 from tqdm import tqdm
-from jtop import jtop
 from ultralytics import YOLO
 from os import listdir, path
 from contextlib import contextmanager
@@ -64,35 +65,31 @@ class PowerSampler:
 		energy = float(np.trapz(p,t))
 		return energy, duration
 
-@contextmanager
-def jtop_context():
-	with jtop() as jetson:
-		while not jetson.ok():
-			time.sleep(0.05)
-		yield jetson
-
 def run_on_images(model_name: str, model_path: str, val_path: str, power: str):
 	model = YOLO(model_path)
 
-	predTimes = []
-#	with jtop_context() as jetson:
 	if not power == "None":
 		if power == "INA219":
 			# TODO: Manage INA219 Data Acquisition
+			print("External power measuring device: INA219. Evaluating inference speed, FPS, Energy and Power Consumption")
 			device = "X"
 		elif power == "INA3221":
+			print("External power measuring device: INA3221. Evaluating inference speed, FPS, Energy and Power Consumption")
+			try:
+				from jtop import jtop
+			except:
+				subprocess.run([sys.executable, 'sudo', 'pip3', 'install', '-U', 'jetson-stats'], check=True)
 			jetson = jtop()
 			jetson.start()
 			device = jetson
 		sampler = PowerSampler(device, period_s = 1)
 		time.sleep(0.005)
 		sampler.start()
-
-	#dummy = np.zeros((640, 640, 3), dtype=np.uint8)
-	#x = model(dummy, verbose=False)
+	else:
+		print("Power measuring device not selected. Evaluating only inference speed and FPS")
 
 	print("----------   Start evaluation of " + model_name + " model evaluation   ----------")
-
+	predTimes = []
 	results = model(val_path, imgsz=640, batch=1, half=True, stream=True, verbose=False)
 	for result in tqdm(results, total=len(listdir(val_path)), desc="Model Evaluation"):
 		predTimes.append(result.speed['preprocess'] + result.speed['inference'] + result.speed['postprocess'])
@@ -102,10 +99,11 @@ def run_on_images(model_name: str, model_path: str, val_path: str, power: str):
 	if not power == "None":
 		sampler.stop()
 		if power == "INA219":
-			# TODO: Managa INA219 Data Acquisition
+			# TODO: Manage INA219 Data Acquisition
 			x = 1
 		elif power == "INA3221":
 			device.close()
+		
 
 	inf_time = sum(predTimes) / len(predTimes)
 	print("Average Inference Speed: ", inf_time, " ms")
@@ -124,7 +122,7 @@ if __name__ == "__main__":
 			description = 'Evaluates a YOLO Model with Ultralytics framework',
 			epilog = 'Prueba')
 	parser.add_argument("model", type=str, help="Name of YOLO model to be evaluated")
-	parser.add_argument("--dir", type=str, default="models/exported/OrinNanoSup/", help="Directory where the model is located")
+	parser.add_argument("dir", type=str, help="Directory where the model is located")
 	parser.add_argument("--format", type=str, default="pt", help="Model export format")
 	parser.add_argument("--data", type=str, default="datasets/DsLMF_minerBehaviorDataset/images/val", help="Directory of validation dataset")
 	parser.add_argument("--power", type=str, default="None", help="Device used to measure power consumption")
