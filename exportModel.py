@@ -13,7 +13,7 @@ def exportModel(model_name: str, model_path: str, format: str, repre: str, save_
 	else:
 		model.export(format=format)
 
-	if not os.path.isdir(save_dir):
+	if not os.path.isdir(save_dir + "/" + model_name + "/weights"):
 		print("---------- Save directory not found")
 		print("---------- Creating Save directory")
 		os.makedirs(save_dir + "/" + model_name + "/weights")
