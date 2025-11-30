@@ -8,6 +8,9 @@ RUN apt-get install -y vim
 # Install Jtop library
 RUN pip install -U jetson-stats
 
+# Install Pyserial Library
+RUN pip install pyserial
+
 # Include new modules in the task manager file
 COPY ultralytics/OrinNanoSup/nn/tasks.py /ultralytics/ultralytics/nn
 

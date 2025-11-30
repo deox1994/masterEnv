@@ -1,119 +1,52 @@
 import sys
 import time
+import serial
 import argparse
-import threading
-import subprocess
 import numpy as np
 
 from tqdm import tqdm
 from ultralytics import YOLO
 from os import listdir, path
-from contextlib import contextmanager
 from typing import Optional, List, Tuple
 
 
-def _getTotalPower(stats) -> Optional[float]:
-	if not isinstance(stats, dict):
-		return None
-	power = float(stats['Power TOT'])/1000.0
-	return power
-
-
-class PowerSampler:
-
-	def __init__(self, jetson, period_s: float = 0.02):
-		self.jetson = jetson
-		self.period_s = period_s
-		self.ts: List[float] = []
-		self.pw: List[float] = []
-		self._run = False
-		self._th: Optional[threading.Thread] = None
-
-	def start(self):
-		self.ts.clear()
-		self.pw.clear()
-		self._run = True
-		self._th = threading.Thread(target=self._loop, daemon=True)
-		self._th.start()
-
-	def stop(self):
-		self._run = False
-		if self._th is not None:
-			self._th.join(timeout=1.0)
-			self._th = None
-
-	def _loop(self):
-		next_t = time.perf_counter()
-		while self._run and self.jetson.ok():
-			now = time.perf_counter()
-			stats = self.jetson.stats
-			p_w = _getTotalPower(stats)
-			if p_w is not None:
-				self.ts.append(now)
-				self.pw.append(p_w)
-			next_t += self.period_s
-			delay = max(0.0, next_t - time.perf_counter())
-			if delay > 0:
-				time.sleep(delay)
-
-	def integrate_energy_j(self) -> Tuple[float, float]:
-		if len(self.ts) < 2:
-			return 0.0, 0.0
-		t = np.array(self.ts)
-		p = np.array(self.pw)
-		duration = t[-1] - t[0]
-		energy = float(np.trapz(p,t))
-		return energy, duration
-
-def run_on_images(model_name: str, model_path: str, val_path: str, power: str):
+def run_on_images(model_name: str, model_path: str, val_path: str, power: str, serPort: str):
 	model = YOLO(model_path)
 
-	if not power == "None":
-		if power == "INA219":
-			# TODO: Manage INA219 Data Acquisition
-			print("External power measuring device: INA219. Evaluating inference speed, FPS, Energy and Power Consumption")
-			device = "X"
-		elif power == "INA3221":
-			print("External power measuring device: INA3221. Evaluating inference speed, FPS, Energy and Power Consumption")
-			try:
-				from jtop import jtop
-			except:
-				subprocess.run([sys.executable, 'sudo', 'pip3', 'install', '-U', 'jetson-stats'], check=True)
-			jetson = jtop()
-			jetson.start()
-			device = jetson
-		sampler = PowerSampler(device, period_s = 1)
-		time.sleep(0.005)
-		sampler.start()
-	else:
-		print("Power measuring device not selected. Evaluating only inference speed and FPS")
-
 	print("----------   Start evaluation of " + model_name + " model evaluation   ----------")
+
 	predTimes = []
+
+	if power:
+		try:
+			ser = serial.Serial(port=serPort, baudrate=115200)
+			ser.isOpen()
+			mess = "S"
+			ser.write(mess.encode())
+		except:
+			print("Can not open Serial Port")
+
 	results = model(val_path, imgsz=640, batch=1, half=True, stream=True, verbose=False)
 	for result in tqdm(results, total=len(listdir(val_path)), desc="Model Evaluation"):
 		predTimes.append(result.speed['preprocess'] + result.speed['inference'] + result.speed['postprocess'])
 
 	print("----------   YOLO" + model_name + " model evaluated ----------")
 
-	if not power == "None":
-		sampler.stop()
-		if power == "INA219":
-			# TODO: Manage INA219 Data Acquisition
-			x = 1
-		elif power == "INA3221":
-			device.close()
-		
-
 	inf_time = sum(predTimes) / len(predTimes)
 	print("Average Inference Speed: ", inf_time, " ms")
 	print("Average FPS: ", int(1000/inf_time))
 
-	if not power == "None":
-		energy, duration = sampler.integrate_energy_j()
-		print("Average Energy: " , energy, " J")
-		print("Average Power: ", energy/duration, " W")
-
+	if power:
+		try:
+			mess = "F"
+			ser.write(mess.encode())
+			time.sleep(0.1)
+			if ser.inWaiting() > 0:
+				power = ser.readline().decode().strip().split(',')
+				print("Total Energy: ", power[0], " mJ")
+				print("Average Power: ", power[1], " mW")
+		except:
+			print("Can not send message")
 
 if __name__ == "__main__":
 
@@ -125,6 +58,7 @@ if __name__ == "__main__":
 	parser.add_argument("dir", type=str, help="Directory where the model is located")
 	parser.add_argument("--format", type=str, default="pt", help="Model export format")
 	parser.add_argument("--data", type=str, default="datasets/DsLMF_minerBehaviorDataset/images/val", help="Directory of validation dataset")
-	parser.add_argument("--power", type=str, default="None", help="Device used to measure power consumption")
+	parser.add_argument("--power", action="store_true", help="Activates energy and power measurements with Arduino controller")
+	parser.add_argument("--serPort", type=str, default="None", help="Device port where Arduino is connected to measure power consumption")
 	args = parser.parse_args()
-	run_on_images(args.model, args.dir + args.model + "/weights/best." + args.format, args.data, args.power)
+	run_on_images(args.model, args.dir + args.model + "/weights/best." + args.format, args.data, args.power, args.serPort)
