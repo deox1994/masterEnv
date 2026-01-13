@@ -10,12 +10,17 @@ from os import listdir, path
 from typing import Optional, List, Tuple
 
 
-def run_on_images(model_name: str, model_path: str, val_path: str, power: str, serPort: str):
+def run_on_images(model_name: str, model_path: str, data_path: str, repetitions:int, half:bool, power: bool, serPort: str):
 	model = YOLO(model_path)
 
 	print("----------   Start evaluation of " + model_name + " model evaluation   ----------")
 
-	predTimes = []
+	print("----------   Step 1: Evaluation Performance of the model   ----------")
+
+	metrics = model.val(data="../datasets/DsLMF_minerBehaviorDataset" + ".yaml", imgsz=640, batch=1, verbose=False, half=half)
+
+	print("----------   Step 2: Evaluating Inference time and Power Consumption of the model   ----------")
+
 
 	if power:
 		try:
@@ -26,15 +31,21 @@ def run_on_images(model_name: str, model_path: str, val_path: str, power: str, s
 		except:
 			print("Can not open Serial Port")
 
-	results = model(val_path, imgsz=640, batch=1, half=True, stream=True, verbose=False)
-	for result in tqdm(results, total=len(listdir(val_path)), desc="Model Evaluation"):
-		predTimes.append(result.speed['preprocess'] + result.speed['inference'] + result.speed['postprocess'])
+	infTimes = []
+	for i in range(repetitions):
+		predTimes = []
+		results = model(data_path + "/images/val", imgsz=640, batch=1, stream=True, verbose=False, half=half)
+		for result in tqdm(results, total=len(listdir(data_path + "/images/val")), desc="Model Evaluation - Experiment " + str(i+1)):
+			predTimes.append(result.speed['preprocess'] + result.speed['inference'] + result.speed['postprocess'])
+		infTimes.append(sum(predTimes) / len(predTimes))
 
 	print("----------   YOLO" + model_name + " model evaluated ----------")
 
-	inf_time = sum(predTimes) / len(predTimes)
-	print("Average Inference Speed: ", inf_time, " ms")
-	print("Average FPS: ", int(1000/inf_time))
+	print("Mean Average Precision mAP@50: ", metrics.box.map50)
+	print("Mean Average Precision mAP@50:95: ", metrics.box.map)
+	avg_infTime = sum(infTimes) / len(infTimes)
+	print("Average Inference Speed: ", avg_infTime, " ms")
+	print("Average FPS: ", int(1000/avg_infTime))
 
 	if power:
 		try:
@@ -56,9 +67,11 @@ if __name__ == "__main__":
 			epilog = 'Prueba')
 	parser.add_argument("model", type=str, help="Name of YOLO model to be evaluated")
 	parser.add_argument("dir", type=str, help="Directory where the model is located")
+	parser.add_argument("--data", type=str, default="datasets/DsLMF_minerBehaviorDataset", help="Directory of dataset")
 	parser.add_argument("--format", type=str, default="pt", help="Model export format")
-	parser.add_argument("--data", type=str, default="datasets/DsLMF_minerBehaviorDataset/images/val", help="Directory of validation dataset")
+	parser.add_argument("--repet", type=int, default="5", help="Repetitions to average inference time and power consumption")
+	parser.add_argument("--half", action="store_true", help="Activates 16 bit (half) Floting point representation for all evaluations")
 	parser.add_argument("--power", action="store_true", help="Activates energy and power measurements with Arduino controller")
 	parser.add_argument("--serPort", type=str, default="None", help="Device port where Arduino is connected to measure power consumption")
 	args = parser.parse_args()
-	run_on_images(args.model, args.dir + args.model + "/weights/best." + args.format, args.data, args.power, args.serPort)
+	run_on_images(args.model, args.dir + args.model + "/weights/best." + args.format, args.data, args.repet, args.half, args.power, args.serPort)
