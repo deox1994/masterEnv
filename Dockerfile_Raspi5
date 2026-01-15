@@ -1,0 +1,33 @@
+#Mejorar escogiendo la version
+FROM ultralytics/ultralytics:latest-arm64
+
+# Install vim editor
+RUN apt-get update
+RUN apt-get install -y vim
+
+# Install Pyserial Library
+RUN pip install pyserial
+
+# Include new modules in the task manager file
+COPY ultralytics/OrinNanoSup/nn/tasks.py /ultralytics/ultralytics/nn
+
+# General V8DetectionLoss (Loss function + Weighted BCE) function:
+#COPY ultralytics/OrinNanoSup/utils/loss.py /ultralytics/ultralytics/utils
+
+# Additional Loss metrics (WIoU and MPDIoU)
+#COPY ultralytics/OrinNanoSup/utils/metrics.py /ultralytics/ultralytics/utils
+
+# New modules: block, attention, conv, pooling
+COPY modules /ultralytics/modules
+
+# Trained models
+COPY models /ultralytics/models
+
+# Change dataset directory in settings.json
+COPY ultralytics/.config/settings.json /root/.config/Ultralytics
+
+# Add test file
+COPY exportModel.py /ultralytics/
+
+# Add evalModel file
+COPY evalModel.py /ultralytics/
