@@ -1,25 +1,191 @@
-## Miner Behavior YOLO (MB-YOLO)
+# Miner Behavior YOLO (MB-YOLO)
 
 MB-YOLO is an optimized and energy efficient variant of the YOLOv11 architecture designed for real-time detection of miners’ behaviors in challenging underground environments. It integrates three key improvements:
 * An enhanced Spatial Pyramid Pooling - Fast (SPPF) module augmented with Large Scale Kernel Attention (LSKA), which expands the effective receptive field and strengthens spatial representations under low illumination and occlusions.
 * A bounding-box regression loss based on Minimum Point Distance Intersection over Union (MPDIoU) to improve optimization stability when predicted and ground-truth boxes share similar aspect ratios but differ in scale.
 * A class-weighted Binary Cross Entropy (BCE) formulation to counteract severe class imbalance in the DsLMF+ dataset.
 
+To ensure deployability on resource-constrained platforms commonly used in robotics, the trained models were exported to hardware-oriented formats, including ONNX for Central Processing Unit (CPU)-only devices and TensorRT with 16-bit floating-point (FP16) quantization for NVIDIA-based Graphics Processing Unit (GPU) platforms. These optimizations reduce memory footprint and computational overhead while
+preserving performance, enabling efficient inference in embedded systems.
+
+## Performance
+
+Comprehensive experiments conducted on a workstation and two edge devices, Raspberry Pi 4 and Jetson Orin Nano Super, demonstrate the effectiveness of the proposed model. MBYOLO achieves 92.1% mAP@0.5 and 75.1% mAP@0.5:0.95, outperforming the YOLOv11n baseline by 1.2% and 0.8%, respectively, with minimal increases of 10.4% in parameters and 3.2% in Giga Floating-point operations (GFLOPs). On the Jetson Orin Nano Super, the model maintains 33 Frames per Second (FPS), meeting real-time requirements even after FP16 quantization. Regarding energy efficiency, MB-YOLO achieves GFPW = 1.90 on the Raspberry Pi 4 and GFPW = 1.15 on the Jetson Orin Nano Super, demonstrating a balanced trade-off between performance and power consumption despite its increased representational capacity.
+
 ![alt text](images/Performance.png)
 
-### Performance
-
-
-| Model | Params (M) | GFLOPs | mAP@0.5 | mAP@0.5:0.95 | FPS | GFPW
-|---|---|---|---|---|---|---|
-| YOLOv5n | 2.50 | 7.1 | 90.7 | 73.6 | 38 | 1.28 |
-| YOLOv8n | 2.81 | 7.5 | 90.7 | 73.1 | 30 | 1.33 |
-| YOLOv9t | 1.97 | 7.6 | 90.9 | 74.8 | 28 | 1.36 |
-| YOLOv10n | 2.26 | 6.5 | 90.8 | 74.2 | 36 | 1.14 |
-| YOLOv11n | 2.58 | 6.3 | 90.9 | 74.3 | 34 | 1.12 |
-| MB-YOLO | 2.85 | 6.5 | 92.1 | 75.1 | 32 | 1.15 |
+<center>
+    <table style="width:100%">
+    <caption>MB-YOLO Performance Comparison with Standard YOLO Models in Jetson Orin Nano Super (TensorRT format - 16bit FP precision)</caption>
+    <thead>
+        <tr>
+        <th>Model</th>
+        <th>Params (M)</th>
+        <th>GFLOPs</th>
+        <th>mAP@0.5</th>
+        <th>mAP@0.5:0.95</th>
+        <th>FPS</th>
+        <th>GFPW</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+        <td>YOLOv5n</td>
+        <td>2.5</td>
+        <td>7.1</td>
+        <td>90.7</td>
+        <td>73.6</td>
+        <td>38</td>
+        <td>1.28</td>
+        </tr>
+        <tr>
+        <td>YOLOv8n</td>
+        <td>2.81</td>
+        <td>7.5</td>
+        <td>90.7</td>
+        <td>73.1</td>
+        <td>30</td>
+        <td>1.33</td>
+        </tr>
+        <tr>
+        <td>YOLOv9t</td>
+        <td>1.97</td>
+        <td>7.6</td>
+        <td>90.9</td>
+        <td>74.8</td>
+        <td>28</td>
+        <td>1.36</td>
+        </tr>
+        <tr>
+        <td>YOLOv10n</td>
+        <td>2.26</td>
+        <td>6.5</td>
+        <td>90.8</td>
+        <td>74.2</td>
+        <td>36</td>
+        <td>1.14</td>
+        </tr>
+        <tr>
+        <td>YOLOv11n</td>
+        <td>2.58</td>
+        <td>6.3</td>
+        <td>90.9</td>
+        <td>74.3</td>
+        <td>24</td>
+        <td>1.12</td>
+        </tr>
+        <tr>
+        <td>MB-YOLO</td>
+        <td>2.85</td>
+        <td>6.5</td>
+        <td>92.1</td>
+        <td>75.1</td>
+        <td>32</td>
+        <td>1.15</td>
+        </tr>
+    </tbody>
+    </table>
+</center>
 
 ## Installation
 
+<details>
+  <summary>Windows VSCode (Virtual Env Recommended)</summary>
+
+  ```bash
+  # Clone the repository
+  git clone https://github.com/deox1994/masterEnv
+
+  # Create the virtual environment and activate
+  python -m venv masterEnv
+  cd masterEnv
+  source bin/activate
+
+  # Install pre-requisites
+  pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu126
+  pip3 install ultralytics=8.3.155
+  pip3 install gdown
+  ```
+</details>
+
+<br>
+
+<details>
+  <summary>Jetson Orin Nano Super (Docker Recommeded)</summary>
+
+  This is the collapsible content.
+  You can include more Markdown here, such as:
+
+  *   Lists
+  *   **Bold text**
+  *   [Links](https://example.com)
+  *   Code blocks
+
+  Make sure to include a blank line after the `</summary>` tag for the Markdown formatting inside to render correctly.
+</details>
+
+<br>
+
+<details>
+  <summary>Raspberry Pi (Docker Recommeded)</summary>
 
 
+
+  Make sure to include a blank line after the `</summary>` tag for the Markdown formatting inside to render correctly.
+</details>
+
+<br>
+
+<details>
+  <summary>Dataset Download</summary>
+
+  ```bash
+  # Create a folder named datasets inside masterEnv folder
+  mkdir -p datasets/DsLMF_minerBehaviorDataset
+
+  # Download and unzip dataset
+  gdown https://drive.google.com/file/d/1uUtCLAlhftJHBlwMgX0mPQdrz5JZkAFF/view?usp=sharing -O .\datasets\DsLMF_minerBehaviorDataset  --fuzzy
+  sudo tar -xf DsLMF_minerBehaviorDataset.zip     # Windows
+  sudo unzip DsLMF_minerBehaviorDataset.zip       # Linux
+
+  # Download yaml file
+  gdown https://drive.google.com/file/d/1rPnNVYKa1DmA9FLAj6JqgblUr5SZi0Va/view?usp=sharing -O .\datasets\  --fuzzy
+  ```
+</details>
+
+## Model Training
+
+
+## Model Export
+
+Windows
+```bash
+python .\exportModel.py v5n_Base .\models\exported\RTX3060\ --format engine --data ..\datasets\DsLMF_minerBehaviorDataset\images\val
+```
+
+Jetson Orin Nano Super
+```bash
+python exportModel.py v5n_Base models/exported/OrinNanoSup --format engine --repre fp16 --data datasets\DsLMF_minerBehaviorDataset\images\val
+```
+
+Raspberry Pi5
+```bash
+python exportModel.py v5n_Base models/exported/Raspi4 --format onnx --repre fp16 --data datasets\DsLMF_minerBehaviorDataset\images\val
+```
+
+## Model Evaluation
+
+Windows
+```bash
+python evalModel.py v5n_Base .\models\exported\RTX3060\ --format engine --data ..\datasets\DsLMF_minerBehaviorDataset\images\val
+```
+
+Jetson Orin Nano Super
+```bash
+python evalModel.py v5n_Base models/exported/OrinNanoSup/ --format engine --data datasets/DsLMF_minerBehaviorDataset/images/val/
+```
+
+Raspberry Pi5
+```bash
+python evalModel.py v5n_Base models/exported/Raspi4/ --format onnx --data datasets/DsLMF_minerBehaviorDataset/images/val/
+```
