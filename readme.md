@@ -12,7 +12,7 @@ preserving performance, enabling efficient inference in embedded systems.
 
 Comprehensive experiments conducted on a workstation and two edge devices, Raspberry Pi 4 and Jetson Orin Nano Super, demonstrate the effectiveness of the proposed model. MBYOLO achieves 92.1% mAP@0.5 and 75.1% mAP@0.5:0.95, outperforming the YOLOv11n baseline by 1.2% and 0.8%, respectively, with minimal increases of 10.4% in parameters and 3.2% in Giga Floating-point operations (GFLOPs). On the Jetson Orin Nano Super, the model maintains 33 Frames per Second (FPS), meeting real-time requirements even after FP16 quantization. Regarding energy efficiency, MB-YOLO achieves GFPW = 1.90 on the Raspberry Pi 4 and GFPW = 1.15 on the Jetson Orin Nano Super, demonstrating a balanced trade-off between performance and power consumption despite its increased representational capacity.
 
-![alt text](images/Performance.png)
+![alt text](images/Performance_wtBack.png)
 
 <center>
     <table style="width:100%">
@@ -113,15 +113,19 @@ Comprehensive experiments conducted on a workstation and two edge devices, Raspb
 <details>
   <summary>Jetson Orin Nano Super (Docker Recommeded)</summary>
 
-  This is the collapsible content.
-  You can include more Markdown here, such as:
+  ```bash
+  # Clone the repository
+  git clone https://github.com/deox1994/masterEnv
 
-  *   Lists
-  *   **Bold text**
-  *   [Links](https://example.com)
-  *   Code blocks
+  # Export platform
+  export JETSON = ultralytics/ultralytics:latest-jetson-jetpack6
 
-  Make sure to include a blank line after the `</summary>` tag for the Markdown formatting inside to render correctly.
+  # Create Docker image
+  sudo docker build --build-arg APP_VERSION=JETSON -t JetsonImage -f Dockerfile .
+
+  # Run Docker image
+  sudo docker run -it --ipc=host --rm --privileged -v /sys:/sys -v/dev:/dev -v /path/to/datasets/folder --runtime=nvidia JetsonImage bash
+  ```
 </details>
 
 <br>
@@ -129,9 +133,19 @@ Comprehensive experiments conducted on a workstation and two edge devices, Raspb
 <details>
   <summary>Raspberry Pi (Docker Recommeded)</summary>
 
+  ```bash
+  # Clone the repository
+  git clone https://github.com/deox1994/masterEnv
 
+  # Export platform
+  export RASPI = ultralytics/ultralytics:latest-arm64
 
-  Make sure to include a blank line after the `</summary>` tag for the Markdown formatting inside to render correctly.
+  # Create Docker image
+  sudo docker build --build-arg APP_VERSION=RASPI -t RaspiImage -f Dockerfile .
+
+  # Run Docker image
+  sudo docker run -it --ipc=host --rm --privileged -v /sys:/sys -v/dev:/dev -v /path/to/datasets/folder RaspiImage bash
+  ```
 </details>
 
 <br>
@@ -145,8 +159,11 @@ Comprehensive experiments conducted on a workstation and two edge devices, Raspb
 
   # Download and unzip dataset
   gdown https://drive.google.com/file/d/1uUtCLAlhftJHBlwMgX0mPQdrz5JZkAFF/view?usp=sharing -O .\datasets\DsLMF_minerBehaviorDataset  --fuzzy
-  sudo tar -xf DsLMF_minerBehaviorDataset.zip     # Windows
-  sudo unzip DsLMF_minerBehaviorDataset.zip       # Linux
+
+  # Unzip file on Windows
+  Expand-Archive -Path .\datasets\DsLMF_minerBehaviorDataset\DsLMF_minerBehaviorDataset.zip .\datasets\DsLMF_minerBehaviorDataset\
+  # Unzip file on Linux  
+  sudo unzip DsLMF_minerBehaviorDataset.zip
 
   # Download yaml file
   gdown https://drive.google.com/file/d/1rPnNVYKa1DmA9FLAj6JqgblUr5SZi0Va/view?usp=sharing -O .\datasets\  --fuzzy
@@ -189,3 +206,23 @@ Raspberry Pi5
 ```bash
 python evalModel.py v5n_Base models/exported/Raspi4/ --format onnx --data datasets/DsLMF_minerBehaviorDataset/images/val/
 ```
+
+
+- Evitar reemplazar el archivo settings.json cuando se usa docker. Es mejor poner que el usuario ingrese el comando:
+yolo settings datasets_dir=/path/to/datasets. Para ver cuales son los valores reales se puede usar yolo settings en el command line.
+Tambien se puede sugerir al usuario que cambie la carpeta donde se almacenaran los resultados.
+
+- Actualizar los dockerfiles considerando que ya no se debera usar la linea:
+COPY ultralytics/.config/settings.json /root/.config/Ultralytics
+
+- Seria bueno que se explique que el proceso de evaluacion consta de dos partes: La primera hace una evaluacion entre el ground truth y las resultados predichos para estimar el mAP. Mientras que la segunda se enfoca en hacer inferencia y verificar la velocidad que toma esta asi como el consumo energetico.
+
+- En el caso de evaluation faltan colocar ejemplos donde se usen los argumentos --power y --serialPort.
+
+- Unificar Docker donde se pasa como argumento la imagen base. Previamente se debe indicar que se debe colocar 
+export ORINNANO = ultralytics/ultralytics:latest-jetson-jetpack6
+export ORINNANO = ultralytics/ultralytics:latest-arm64
+
+- Actualizar gitignore para que se ignore la carpeta datasets
+
+- Hacer pruebas para que cada uno de los scripts (train, export y eval) funcionen correctamente en las tres plataformas.
