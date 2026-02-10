@@ -13,7 +13,7 @@ COPY ultralytics/Edge/nn/tasks.py /ultralytics/ultralytics/nn
 COPY ultralytics/Edge/utils/loss.py /ultralytics/ultralytics/utils
 
 # Additional Loss metrics (WIoU and MPDIoU)
-COPY ultralytics/utils/metrics.py /ultralytics/ultralytics/utils
+COPY ultralytics/Edge/utils/metrics.py /ultralytics/ultralytics/utils
 
 # New modules: block, attention, conv, pooling
 COPY modules /ultralytics/modules
