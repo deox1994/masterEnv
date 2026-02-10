@@ -164,10 +164,11 @@ Comprehensive experiments conducted on a workstation and two edge devices, Raspb
   export JETSON=ultralytics/ultralytics:latest-jetson-jetpack6
 
   # Create Docker image
-  sudo docker build --build-arg BASE_IMAGE=$JETSON -t JetsonImage -f Dockerfile .
+  cd masterEnv
+  sudo docker build --build-arg BASE_IMAGE=$JETSON -t jetsonimage -f Dockerfile .
 
   # Run Docker image
-  sudo docker run -it --ipc=host --rm --privileged -v /sys:/sys -v/dev:/dev -v /path/to/datasets/folder --runtime=nvidia JetsonImage bash
+  sudo docker run -it --ipc=host --rm --privileged -v /sys:/sys -v/dev:/dev -v /path/to/datasets/folder --runtime=nvidia jetsonimage bash
   ```
 </details>
 
@@ -181,13 +182,13 @@ Comprehensive experiments conducted on a workstation and two edge devices, Raspb
   git clone https://github.com/deox1994/masterEnv
 
   # Export platform
-  export RASPI = ultralytics/ultralytics:latest-arm64
+  export RASPI=ultralytics/ultralytics:latest-arm64
 
   # Create Docker image
-  sudo docker build --build-arg APP_VERSION=RASPI -t RaspiImage -f Dockerfile .
+  sudo docker build --build-arg BASE_IMAGE=$RASPI -t raspiimage -f Dockerfile .
 
   # Run Docker image
-  sudo docker run -it --ipc=host --rm --privileged -v /sys:/sys -v/dev:/dev -v /path/to/datasets/folder RaspiImage bash
+  sudo docker run -it --ipc=host --rm --privileged -v /sys:/sys -v/dev:/dev -v /path/to/datasets/folder raspiimage bash
   ```
 </details>
 

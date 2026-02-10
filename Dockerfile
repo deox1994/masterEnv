@@ -7,10 +7,10 @@ RUN apt-get update
 RUN pip install pyserial
 
 # Include new modules in the task manager file
-COPY ultralytics/nn/tasks.py /ultralytics/ultralytics/nn
+COPY ultralytics/Edge/nn/tasks.py /ultralytics/ultralytics/nn
 
 # General V8DetectionLoss (Loss function + Weighted BCE) function:
-COPY ultralytics/utils/loss.py /ultralytics/ultralytics/utils
+COPY ultralytics/Edge/utils/loss.py /ultralytics/ultralytics/utils
 
 # Additional Loss metrics (WIoU and MPDIoU)
 COPY ultralytics/utils/metrics.py /ultralytics/ultralytics/utils
