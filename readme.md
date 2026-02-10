@@ -183,11 +183,14 @@ Raspberry Pi (Docker Recommeded)
 
 ## Model Training
 
+```bash
+python <train.py> <modelName> </path/to/save/exported/model>  --format <format> --half
+```
 
 ## Model Export
 
 ```bash
-python <export.py> <modelName> </path/to/save/exported/model>  --format <format> --half
+python <export.py> <modelName> </directory/to/save/exported/model>  --format <format> --half
 ```
 
 * Windows
@@ -208,22 +211,22 @@ python export.py v5n_Base models/exported/Raspi --format onnx --half
 ## Model Evaluation
 
 ```bash
-python <evaluate.py> <modelName> </path/to/save/exported/model>  --format <format> --half
+python <evaluate.py> <modelName> </directory/where/exported/model/is/located> --yamlName <yamlFileName> --dataPath </directory/of/image/and/labels>  --format <format> --repet <repetitions> --half --power --serPort <serialPortName>
 ```
 
 Windows
 ```bash
-python evalModel.py v5n_Base .\models\exported\RTX3060\ --format engine
+python evalModel.py v5n_Base .\models\exported\RTX3060\ --format engine--repet 5
 ```
 
 Jetson Orin Nano Super
 ```bash
-python evalModel.py v5n_Base models/exported/OrinNanoSup/ --format engine --data datasets/DsLMF_minerBehaviorDataset/images/val/
+python evaluate.py v5n_Base models/exported/OrinNanoSup/ --format engine --repet 5 --half --power --serPort /dev/ttyTHS1
 ```
 
 Raspberry Pi5
 ```bash
-python evalModel.py v5n_Base models/exported/Raspi4/ --format onnx --data datasets/DsLMF_minerBehaviorDataset/images/val/
+python evaluate.py v5n_Base models/exported/OrinNanoSup/ --format engine --repet 5 --half --power --serPort /dev/ttyTHS1
 ```
 
 
@@ -242,6 +245,5 @@ COPY ultralytics/.config/settings.json /root/.config/Ultralytics
 export ORINNANO = ultralytics/ultralytics:latest-jetson-jetpack6
 export ORINNANO = ultralytics/ultralytics:latest-arm64
 
-- Actualizar gitignore para que se ignore la carpeta datasets
 
 - Hacer pruebas para que cada uno de los scripts (train, export y eval) funcionen correctamente en las tres plataformas.

@@ -21,9 +21,6 @@ COPY modules /ultralytics/modules
 # Trained models
 COPY models /ultralytics/models
 
-# Change dataset directory in settings.json
-#COPY ultralytics/.config/settings.json /root/.config/Ultralytics
-
 # Add train script
 COPY train.py /ultralytics/
 
