@@ -1,7 +1,6 @@
 attention.py
 conv.py
 yolo11n.pt
-*.png
 *.jpg
 *.csv
 *last.pt

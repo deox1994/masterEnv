@@ -87,6 +87,50 @@ Comprehensive experiments conducted on a workstation and two edge devices, Raspb
     </table>
 </center>
 
+## Dataset Download
+
+<details>
+  <summary> Windows </summary>
+
+  ```bash
+  # Install library
+  pip3 install gdown
+
+  # Create a folder called datasets
+  mkdir -p datasets/DsLMF_minerBehaviorDataset
+
+  # Download and unzip dataset
+  gdown https://drive.google.com/file/d/1uUtCLAlhftJHBlwMgX0mPQdrz5JZkAFF/view?usp=sharing -O .\datasets\DsLMF_minerBehaviorDataset  --fuzzy
+
+  Expand-Archive -Path .\datasets\DsLMF_minerBehaviorDataset\DsLMF_minerBehaviorDataset.zip .\datasets\DsLMF_minerBehaviorDataset\
+
+  # Download yaml file
+  gdown https://drive.google.com/file/d/1rPnNVYKa1DmA9FLAj6JqgblUr5SZi0Va/view?usp=sharing -O .\datasets\  --fuzzy
+  ```
+</details>
+
+<br>
+
+<details>
+  <summary> Linux </summary>
+
+  ```bash
+  # Install library
+  pip3 install gdown
+
+  # Create a folder called datasets
+  mkdir -p datasets/DsLMF_minerBehaviorDataset
+
+  # Download and unzip dataset
+  gdown https://drive.google.com/uc?id=\1uUtCLAlhftJHBlwMgX0mPQdrz5JZkAFF -O datasets/DsLMF_minerBehaviorDataset/
+
+  unzip datasets/DsLMF_minerBehaviorDataset/DsLMF_minerBehaviorDataset.zip -d datasets/DsLMF_minerBehaviorDataset/
+
+  # Download yaml file
+  gdown https://drive.google.com/uc?id=\1rPnNVYKa1DmA9FLAj6JqgblUr5SZi0Va -O datasets/
+  ```
+</details>
+
 ## Installation
 
 <details>
@@ -104,7 +148,6 @@ Comprehensive experiments conducted on a workstation and two edge devices, Raspb
   # Install pre-requisites
   pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu126
   pip3 install ultralytics=8.3.155
-  pip3 install gdown
   ```
 </details>
 
@@ -118,10 +161,10 @@ Comprehensive experiments conducted on a workstation and two edge devices, Raspb
   git clone https://github.com/deox1994/masterEnv
 
   # Export platform
-  export JETSON = ultralytics/ultralytics:latest-jetson-jetpack6
+  export JETSON=ultralytics/ultralytics:latest-jetson-jetpack6
 
   # Create Docker image
-  sudo docker build --build-arg APP_VERSION=JETSON -t JetsonImage -f Dockerfile .
+  sudo docker build --build-arg BASE_IMAGE=$JETSON -t JetsonImage -f Dockerfile .
 
   # Run Docker image
   sudo docker run -it --ipc=host --rm --privileged -v /sys:/sys -v/dev:/dev -v /path/to/datasets/folder --runtime=nvidia JetsonImage bash
@@ -145,28 +188,6 @@ Comprehensive experiments conducted on a workstation and two edge devices, Raspb
 
   # Run Docker image
   sudo docker run -it --ipc=host --rm --privileged -v /sys:/sys -v/dev:/dev -v /path/to/datasets/folder RaspiImage bash
-  ```
-</details>
-
-<br>
-
-<details>
-  <summary>Dataset Download</summary>
-
-  ```bash
-  # Create a folder named datasets inside masterEnv folder
-  mkdir -p datasets/DsLMF_minerBehaviorDataset
-
-  # Download and unzip dataset
-  gdown https://drive.google.com/file/d/1uUtCLAlhftJHBlwMgX0mPQdrz5JZkAFF/view?usp=sharing -O .\datasets\DsLMF_minerBehaviorDataset  --fuzzy
-
-  # Unzip file on Windows
-  Expand-Archive -Path .\datasets\DsLMF_minerBehaviorDataset\DsLMF_minerBehaviorDataset.zip .\datasets\DsLMF_minerBehaviorDataset\
-  # Unzip file on Linux  
-  sudo unzip DsLMF_minerBehaviorDataset.zip
-
-  # Download yaml file
-  gdown https://drive.google.com/file/d/1rPnNVYKa1DmA9FLAj6JqgblUr5SZi0Va/view?usp=sharing -O .\datasets\  --fuzzy
   ```
 </details>
 
