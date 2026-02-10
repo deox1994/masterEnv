@@ -22,7 +22,7 @@ COPY modules /ultralytics/modules
 COPY models /ultralytics/models
 
 # Change dataset directory in settings.json
-COPY ultralytics/.config/settings.json /root/.config/Ultralytics
+#COPY ultralytics/.config/settings.json /root/.config/Ultralytics
 
 # Add train script
 COPY train.py /ultralytics/
@@ -32,6 +32,9 @@ COPY export.py /ultralytics/
 
 # Add evalModel script
 COPY evaluate.py /ultralytics/
+
+# Set the datasets directory
+RUN yolo settings datasets_dir=../datasets
 
 
 

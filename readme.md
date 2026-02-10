@@ -89,8 +89,7 @@ Comprehensive experiments conducted on a workstation and two edge devices, Raspb
 
 ## Dataset Download
 
-<details>
-  <summary> Windows </summary>
+Windows
 
   ```bash
   # Install library
@@ -107,12 +106,8 @@ Comprehensive experiments conducted on a workstation and two edge devices, Raspb
   # Download yaml file
   gdown https://drive.google.com/file/d/1rPnNVYKa1DmA9FLAj6JqgblUr5SZi0Va/view?usp=sharing -O .\datasets\  --fuzzy
   ```
-</details>
 
-<br>
-
-<details>
-  <summary> Linux </summary>
+Linux
 
   ```bash
   # Install library
@@ -129,12 +124,10 @@ Comprehensive experiments conducted on a workstation and two edge devices, Raspb
   # Download yaml file
   gdown https://drive.google.com/uc?id=\1rPnNVYKa1DmA9FLAj6JqgblUr5SZi0Va -O datasets/
   ```
-</details>
 
 ## Installation
 
-<details>
-  <summary>Windows VSCode (Virtual Env Recommended)</summary>
+Windows VSCode (Virtual Env Recommended)
 
   ```bash
   # Clone the repository
@@ -148,13 +141,12 @@ Comprehensive experiments conducted on a workstation and two edge devices, Raspb
   # Install pre-requisites
   pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu126
   pip3 install ultralytics=8.3.155
+  pip3 install tensorrt
   ```
-</details>
 
 <br>
 
-<details>
-  <summary>Jetson Orin Nano Super (Docker Recommeded)</summary>
+Jetson Orin Nano Super (Docker Recommeded)
 
   ```bash
   # Clone the repository
@@ -168,14 +160,12 @@ Comprehensive experiments conducted on a workstation and two edge devices, Raspb
   sudo docker build --build-arg BASE_IMAGE=$JETSON -t jetsonimage -f Dockerfile .
 
   # Run Docker image
-  sudo docker run -it --ipc=host --rm --privileged -v /sys:/sys -v/dev:/dev -v /path/to/datasets/folder --runtime=nvidia jetsonimage bash
+  sudo docker run -it --ipc=host --rm --privileged -v /sys:/sys -v/dev:/dev -v /path/to/datasets/folder/:/datasets --runtime=nvidia jetsonimage bash
   ```
-</details>
 
 <br>
 
-<details>
-  <summary>Raspberry Pi (Docker Recommeded)</summary>
+Raspberry Pi (Docker Recommeded)
 
   ```bash
   # Clone the repository
@@ -188,35 +178,42 @@ Comprehensive experiments conducted on a workstation and two edge devices, Raspb
   sudo docker build --build-arg BASE_IMAGE=$RASPI -t raspiimage -f Dockerfile .
 
   # Run Docker image
-  sudo docker run -it --ipc=host --rm --privileged -v /sys:/sys -v/dev:/dev -v /path/to/datasets/folder raspiimage bash
+  sudo docker run -it --ipc=host --rm --privileged -v /sys:/sys -v/dev:/dev -v /path/to/datasets/folder/:/datasets raspiimage bash
   ```
-</details>
 
 ## Model Training
 
 
 ## Model Export
 
-Windows
 ```bash
-python .\exportModel.py v5n_Base .\models\exported\RTX3060\ --format engine --data ..\datasets\DsLMF_minerBehaviorDataset\images\val
+python <export.py> <modelName> </path/to/save/exported/model>  --format <format> --half
 ```
 
-Jetson Orin Nano Super
+* Windows
 ```bash
-python exportModel.py v5n_Base models/exported/OrinNanoSup --format engine --repre fp16 --data datasets\DsLMF_minerBehaviorDataset\images\val
+python .\export.py v5n_Base .\models\exported\RTX3060  --format engine --half
 ```
 
-Raspberry Pi5
+* Jetson Orin Nano Super
 ```bash
-python exportModel.py v5n_Base models/exported/Raspi4 --format onnx --repre fp16 --data datasets\DsLMF_minerBehaviorDataset\images\val
+python export.py v5n_Base models/exported/OrinNanoSup --format engine --half
+```
+
+* Raspberry Pi5
+```bash
+python export.py v5n_Base models/exported/Raspi --format onnx --half
 ```
 
 ## Model Evaluation
 
+```bash
+python <evaluate.py> <modelName> </path/to/save/exported/model>  --format <format> --half
+```
+
 Windows
 ```bash
-python evalModel.py v5n_Base .\models\exported\RTX3060\ --format engine --data ..\datasets\DsLMF_minerBehaviorDataset\images\val
+python evalModel.py v5n_Base .\models\exported\RTX3060\ --format engine
 ```
 
 Jetson Orin Nano Super
