@@ -24,11 +24,14 @@ COPY models /ultralytics/models
 # Change dataset directory in settings.json
 COPY ultralytics/.config/settings.json /root/.config/Ultralytics
 
-# Add test file
-COPY exportModel.py /ultralytics/
+# Add train script
+COPY train.py /ultralytics/
 
-# Add evalModel file
-COPY evalModel.py /ultralytics/
+# Add export script
+COPY export.py /ultralytics/
+
+# Add evalModel script
+COPY evaluate.py /ultralytics/
 
 
 
